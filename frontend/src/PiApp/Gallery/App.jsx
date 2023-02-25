@@ -2,7 +2,33 @@
 import React, { useState } from 'react';
 import FilerobotImageEditor, { TABS, TOOLS} from 'react-filerobot-image-editor';
 
+
+
 export default function App({onFileSave}) {
+
+  
+function fck(url){  
+    fetch(url)
+        .then((d)=>d.blob())
+        .then(blob=>{
+            readFIle(blob) 
+            const file = new File([blob] , 'image',{type:blob.type});
+             onFileSave(file);
+        }
+        ).catch((e)=>{console.log(e)})
+
+function readFIle(file){
+     const fs = new FileReader();
+
+     fs.addEventListener('load',()=>{
+          const res = fs.result;
+          // console.log(res)
+     })     
+     fs.readAsDataURL(file);
+}
+}
+
+
   const [isImgEditorShown, setIsImgEditorShown] = useState(false);
 
   const openImgEditor = () => {
@@ -12,6 +38,7 @@ export default function App({onFileSave}) {
   const closeImgEditor  = () => {
     setIsImgEditorShown(false);
   };
+
 
   
 
@@ -26,7 +53,13 @@ export default function App({onFileSave}) {
             {isImgEditorShown && (
             <FilerobotImageEditor
                 source={file}
-                onSave={(editedImageObject, designState) => (onFileSave(editedImageObject))}
+                onSave={(editedImageObject, designState) => {
+                    // (onFileSave(editedImageObject))
+                    fck(designState.imgSrc)
+                    console.log(editedImageObject)
+                    console.log(designState)
+                }
+              }
                 onClose={closeImgEditor}
                 annotationsCommon={{
                   fill: '#ff0000'

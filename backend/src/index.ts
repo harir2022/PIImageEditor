@@ -18,6 +18,9 @@ import mountUserEndpoints from './handlers/users';
 import "./types/session";
 import mountServiceEndpoints from './handlers/files';
 
+
+
+
 const dbName = env.mongo_db_name;
 const mongoUri = `mongodb://${env.mongo_host}/${dbName}`;
 const mongoClientOptions = {
@@ -61,6 +64,16 @@ app.use(cors({
 // Handle cookies 🍪
 app.use(cookieParser());
 
+
+import cloudinary from 'cloudinary';
+
+
+// Configuration 
+cloudinary.v2.config({
+  cloud_name: "dn0fnz8af",
+  api_key: "551424863633635",
+  api_secret: "vxp0ByTfM3c0CaxicVlqRGtCNq4"
+});
 
 
 

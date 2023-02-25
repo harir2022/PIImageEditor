@@ -1,3 +1,4 @@
+
 import React, {HtmlHTMLAttributes, useState} from 'react';
 import axios from 'axios';
 import ProductCard from './components/ProductCard';
@@ -9,6 +10,7 @@ import { Web3Storage } from 'web3.storage/dist/bundle.esm.min.js'
 import Gallery from '../PiApp/Gallery/Gallery';
 
 
+
 type MyPaymentMetadata = {};
 
 type AuthResult = {
@@ -17,7 +19,7 @@ type AuthResult = {
     uid: string,
     username: string
   }
-};
+}
 
 export type User = AuthResult['user'];
 
@@ -61,7 +63,7 @@ const config = {headers: {'Content-Type': 'application/json', 'Access-Control-Al
 
 
 export default function Shop() {
-  const [authRes, setAuthRes] = useState<AuthResult>()
+  const [authRes, setAuthRes] = useState<AuthResult|null>()
   const [user, setUser] = useState<User | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
 
@@ -69,6 +71,8 @@ export default function Shop() {
     console.log("Sigin in")
     const scopes = ['username', 'payments'];
     const authResult: AuthResult = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
+    
+    if(!authResult) return;
     signInUser(authResult);
     setUser(authResult.user);
     setAuthRes(authResult)
@@ -85,7 +89,11 @@ export default function Shop() {
   }
 
   const signOutUser = () => {
-    return axiosClient.get('/user/signout');
+    axiosClient.get('/user/signout');
+    setUser(null);
+    setAuthRes(null)
+    
+    
   }
 
   const onModalClose = () => {
@@ -135,65 +143,63 @@ export default function Shop() {
     }
   }
 
-
-  function getAccessToken () {
-      return web3_api_key;
-  }
-  
-  function makeStorageClient () {
-    return new Web3Storage({ token: getAccessToken() })
-  }
-  
-  
-  
-  const uploadToIpfs=async(image:any)=> {     
-    if(!authRes)  {
-      console.log("log in first");
-      return ;
-    }
-
-    // console.log(image)
-    // Construct with token and endpoint
-    
-    
-    const client = makeStorageClient();
-    
-    // Pack files into a CAR and send to web3.storage
-    const rootCid = await client.put(image) // Promise<CIDString>
-    
-    // Get info on the Filecoin deals that the CID is stored in
-    const info = await client.status(rootCid) // Promise<Status | undefined>
-    
-    // Fetch and verify files from web3.storage
-    const res = await client.get(rootCid) // Promise<Web3Response | null>
-    const files = await res.files() // Promise<Web3File[]>
-    
-    const ans =await axiosClient.post('/users/upload', {files,authRes});
-    console.log(ans)
-
-  }
-  
-
-  
   //image upload
   const  submitHandler= async(e:any, image:any)=>{    
         e.preventDefault();
-        if(image==null) return ;               
-        let properImage= await fetch(image).then(r => r.blob());
-        uploadToIpfs(properImage);
-        console.log("image uploaded :submit hanlder")
+        if(image==null) return ;   
+
+        // console.log(image);
+        if(!authRes) return;
+        const  formdata = new FormData();
+        formdata.set('image',image.imageBase64);
+        
+
+        formdata.set('imageName',image.name)
+        formdata.set('accessToken',authRes.accessToken)
+        formdata.set('uid',authRes.user.uid)
+        formdata.set('userName',authRes.user.username)
+
+        console.log(formdata)
+
+        let  config = {headers: {'Content-Type': 'multipart/form-data', 'Access-Control-Allow-Origin': '*'}};
+        await axiosClient.post("/users/upload",formdata,config);      
+        
+        
+
+        // const images=new DataTransfer();
+        // images.items.add(image);
+        // uploadToIpfs(image);
+        // console.log("image uploaded :submit hanlder")
         // console.log(properImage)
      
   }
 
+  
+
  
 
-  
+  const [file, setFile] = useState<File|null>(null)
   return (
     <>
     <Header user={user} onSignIn={signIn} onSignOut={signOut}/>   
 
     <ImageUpload submitHandler={submitHandler}/>
+    
+    {/* <form onSubmit={(e:any)=>{
+      // submitHandler(e,image);
+      e.preventDefault();
+      if(!file) {
+        console.log("file is null")
+        return;
+      }
+      console.log("uploadiin....")
+      uploadToIpfs(file);
+    }} >
+      <input type="file" name="" id=" "  multiple  onChange={(e:any)=>{
+        setFile(e.target.files)
+      }}/>
+      <input type="submit" value="Okay" />
+    </form> */}
     
     
       
