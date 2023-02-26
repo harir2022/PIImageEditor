@@ -11,7 +11,7 @@ export interface UserData {
 export interface Store{
   _id:ObjectId,
   uid:string,
-  url:string,
+  image:object,
   date:Timestamp,
 }
 
@@ -20,7 +20,7 @@ export interface SharedResource{
     fromId:string,
     toId:string,
     date:Timestamp,
-    url:string,
+    image:object,
     access:Boolean // 1-edit 0-view
 }
 

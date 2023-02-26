@@ -1,3 +1,5 @@
+import {axiosClient , config} from '../Axios/axiosClient';
+import {BrowserRouter as Router , Route} from 'react-router-dom'
 import React, {HtmlHTMLAttributes, useState} from 'react';
 import axios from 'axios';
 import ProductCard from './components/ProductCard';
@@ -7,6 +9,8 @@ import ImageUpload from '../PiApp/ImageUpload';
 // @ts-ignore
 import { Web3Storage } from 'web3.storage/dist/bundle.esm.min.js'
 import Gallery from '../PiApp/Gallery/Gallery';
+import ImageDetails from '../PiApp/Gallery/GalleryComponent/ImageDetails';
+
 
 
 type MyPaymentMetadata = {};
@@ -17,7 +21,7 @@ type AuthResult = {
     uid: string,
     username: string
   }
-};
+}
 
 export type User = AuthResult['user'];
 
@@ -54,21 +58,23 @@ interface WindowWithEnv extends Window {
 
 const _window: WindowWithEnv = window;
 const backendURL = _window.__ENV && _window.__ENV.backendURL;
-const web3_api_key = _window.__ENV && _window.__ENV.web3_api_key;
 
-const axiosClient = axios.create({ baseURL: `${backendURL}`, timeout: 20000, withCredentials: true});
-const config = {headers: {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}};
+
+
+// const config = {headers: {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}};
 
 
 export default function Shop() {
-  const [authRes, setAuthRes] = useState<AuthResult>()
+  
   const [user, setUser] = useState<User | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
 
   const signIn = async () => {
-    console.log("Sigin in")
+    //("Sigin in")
     const scopes = ['username', 'payments'];
     const authResult: AuthResult = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
+    
+    if(!authResult) return;
     signInUser(authResult);
     setUser(authResult.user);
     setAuthRes(authResult)
@@ -85,7 +91,11 @@ export default function Shop() {
   }
 
   const signOutUser = () => {
-    return axiosClient.get('/user/signout');
+    axiosClient.get('/user/signout');
+    setUser(null);
+    setAuthRes(null)
+    
+    
   }
 
   const onModalClose = () => {
@@ -104,97 +114,102 @@ export default function Shop() {
       onError
     };
     const payment = await window.Pi.createPayment(paymentData, callbacks);
-    console.log(payment);
+    //(payment);
   }
 
   const onIncompletePaymentFound = (payment: PaymentDTO) => {
-    console.log("onIncompletePaymentFound", payment);
+    //("onIncompletePaymentFound", payment);
     return axiosClient.post('/payments/incomplete', {payment});
   }
 
   const onReadyForServerApproval = (paymentId: string) => {
-    console.log("onReadyForServerApproval", paymentId);
+    //("onReadyForServerApproval", paymentId);
     axiosClient.post('/payments/approve', {paymentId}, config);
   }
 
   const onReadyForServerCompletion = (paymentId: string, txid: string) => {
-    console.log("onReadyForServerCompletion", paymentId, txid);
+    //("onReadyForServerCompletion", paymentId, txid);
     axiosClient.post('/payments/complete', {paymentId, txid}, config);
   }
 
   const onCancel = (paymentId: string) => {
-    console.log("onCancel", paymentId);
+    //("onCancel", paymentId);
     return axiosClient.post('/payments/cancelled_payment', {paymentId});
   }
 
   const onError = (error: Error, payment?: PaymentDTO) => {
-    console.log("onError", error);
+    //("onError", error);
     if (payment) {
-      console.log(payment);
+      //(payment);
       // handle the error accordingly
     }
   }
 
-
-  function getAccessToken () {
-      return web3_api_key;
-  }
   
-  function makeStorageClient () {
-    return new Web3Storage({ token: getAccessToken() })
-  }
-  
-  
-  
-  const uploadToIpfs=async(image:any)=> {     
-    if(!authRes)  {
-      console.log("log in first");
-      return ;
-    }
-
-    // console.log(image)
-    // Construct with token and endpoint
-    
-    
-    const client = makeStorageClient();
-    
-    // Pack files into a CAR and send to web3.storage
-    const rootCid = await client.put(image) // Promise<CIDString>
-    
-    // Get info on the Filecoin deals that the CID is stored in
-    const info = await client.status(rootCid) // Promise<Status | undefined>
-    
-    // Fetch and verify files from web3.storage
-    const res = await client.get(rootCid) // Promise<Web3Response | null>
-    const files = await res.files() // Promise<Web3File[]>
-    
-    const ans =await axiosClient.post('/users/upload', {files,authRes});
-    console.log(ans)
-
-  }
   
 
-  
-  //image upload
-  const  submitHandler= async(e:any, image:any)=>{    
-        e.preventDefault();
-        if(image==null) return ;               
-        let properImage= await fetch(image).then(r => r.blob());
-        uploadToIpfs(properImage);
-        console.log("image uploaded :submit hanlder")
-        // console.log(properImage)
-     
+  const [authRes, setAuthRes] = useState<AuthResult|null>()
+
+  const [file, setFile] = useState<File|null>(null)
+  if(!authRes){
+    <SignIn onSignIn={signIn} onModalClose={onModalClose} />
   }
 
- 
-
-  
+  const [showGallery, setShowGallery] = useState(false)
+  const [showApp, setShowApp] = useState(false)
   return (
     <>
-    <Header user={user} onSignIn={signIn} onSignOut={signOut}/>   
+    <Header user={user} onSignIn={signIn} onSignOut={signOut} />  
+    {authRes ?
+    <>
+            {
+              !showGallery && !showApp ?(
+                <>
+                <button 
+                className="w-full bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
+                    onClick={()=>{setShowGallery(!showGallery)}}>
+                      {showGallery ? 
+                      (
+                      <>
+                      Hide Gallery 
+                      </>
+                      ): 
+                      <>
+                      Show Gallery
+                      </>
+                      }
+                  </button>
+                <ImageUpload  {...authRes}/>
+                </>
+              ):(
+                showGallery  ?(
+                  <>
+                  <p className="font-sans text-center text-xl font-bold">Gallery</p>
+                  <Gallery {...authRes}/>
+                  </>
+                ):(
+                  showApp &&(
+                    <ImageUpload  {...authRes}/>
+                  )
+                )
+              )
 
-    <ImageUpload submitHandler={submitHandler}/>
+            }  
     
+    </>
+    :(
+      <>
+      <p className='w-full flex  md:items-start h-screen bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 justify-center items-center bg-blue-500 text-white-700 font-semibold hover:text-blue bg-white-500 py-2 px-4 '>
+            Login first
+      </p>
+      </>
+    )
+}
+   
+    
+    { authRes && showGallery &&
+            <Gallery {...authRes}/>
+    } 
     
       
       {/* <ProductCard

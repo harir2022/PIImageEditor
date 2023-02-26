@@ -1,37 +1,66 @@
-import React from 'react'
-// @ts-ignore
-import { Web3Storage} from 'web3.storage/dist/bundle.esm.min.js'
+import React,{useState,useEffect} from 'react'
+import {axiosClient,  config } from '../../Axios/axiosClient'
+import Image from './GalleryComponent/Image'
 
 
-const makeGatewayURL=(cid:any,img:any)=>{
-     return "https://w3s.link/ipfs/"+cid+img;
+
+type IMAGE ={
+        url:string,
+        name:string
 }
 
 
-export async function getImageMetadata(cid: any) {
-     const url = makeGatewayURL(cid, 'metadata.json')
-     const res = await fetch(url)
-     if (!res.ok) {
-       throw new Error(`error fetching image metadata: [${res.status}] ${res.statusText}`)
-     }
-     const metadata = await res.json()
-     const gatewayURL = makeGatewayURL(cid, metadata.path)
-     const uri = `ipfs://${cid}/${metadata.path}`
-     console.log(uri)
-     return { ...metadata, cid, gatewayURL, uri }
-   }
+function Gallery({accessToken,user}:any) {
+
+  
+  const [images, setImages] = useState<IMAGE[]>([])
+
+  const fetchImages=  () => {
+    if(!user) return;
+    
+    const  uid  = user.uid;
+       
+     axiosClient.get(`/users/gallery/${uid}`).then((data:any)=>{
+      setImages([...data.data.images]);
+     });
+    //  //(data);
+  }
+
+  useEffect( () => {
+      fetchImages();   
+      // //("gallery called")
+  },[])
+  
 
 
 
-function Gallery() {
-     const url:string ="";
+
   return (
-    <>
-          <h1>Hi ther </h1>
-          <img src={url}/>
+    
+    <section className="overflow-hidden text-neutral-700">
+              
+    <div className="container mx-auto px-5 py-2 lg:px-32 lg:pt-12">
+              <div className="-m-1 flex flex-wrap md:-m-2">
+
+              {
+            images.map((image)=>{              
+              return (
+              <div key={image.url}>
+                  <Image imageUrl={image.url} imageName={image.name} user={user}/>
+              </div>
+              )
+            })
+          }
+        </div>              
+    </div>
+
+</section>
+    
+       
+          
 
           
-    </>
+    
   )
 }
 

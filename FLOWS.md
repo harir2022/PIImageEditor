@@ -81,7 +81,7 @@ const signInUser = (authResult: any) => {
     try {
       /* verify with the user's access token */
       const me = await axiosClient.get(`/v2/me`, { headers: { 'Authorization': `Bearer ${currentUser.accessToken}` } });
-      console.log(me);
+      //(me);
     }
     catch (err) {
       console.error(err);
@@ -121,7 +121,7 @@ const orderProduct = async (memo: string, amount: number, paymentMetadata: MyPay
   };
 
   const payment = await window.Pi.createPayment(paymentData, callbacks);
-  console.log("payment", payment);
+  //("payment", payment);
 };
 ```
 
@@ -134,7 +134,7 @@ It is called when the payment identifier (`paymentId`) is obtained from Pi Serve
 // frontend/src/Shop/index.ts
 
 const onReadyForServerApproval = (paymentId: string) => {
-  console.log("onReadyForServerApproval", paymentId);
+  //("onReadyForServerApproval", paymentId);
   axiosClient.post("/approve", { paymentId }, config);
 };
 ```
@@ -165,7 +165,7 @@ It is called when the user has submitted the transaction to the Pi blockchain.
 // frontend/src/Shop/index.ts
 
 const onReadyForServerCompletion = (paymentId: string, txid: string) => {
-  console.log("onReadyForServerCompletion", paymentId, txid);
+  //("onReadyForServerCompletion", paymentId, txid);
   axiosClient.post("/complete", { paymentId, txid }, config);
 };
 ```
@@ -196,7 +196,7 @@ It is called when the payment is canceled - this can be triggered by a user acti
 // frontend/src/Shop/index.ts
 
 const onCancel = (paymentId: string) => {
-  console.log("onCancel", paymentId);
+  //("onCancel", paymentId);
   return axiosClient.post("/cancelled_payment", { paymentId }, config);
 };
 ```
@@ -214,9 +214,9 @@ Otherwise, only the first argument will be provided.
 // frontend/src/Shop/index.ts
 
 const onError = (error: Error, payment?: PaymentDTO) => {
-  console.log("onError", error);
+  //("onError", error);
   if (payment) {
-    console.log(payment);
+    //(payment);
     /* handle the error accordingly */
   }
 };
@@ -230,7 +230,7 @@ const onError = (error: Error, payment?: PaymentDTO) => {
 // frontend/src/Shop/index.ts
 
 const onIncompletePaymentFound = (payment: PaymentDTO) => {
-  console.log("onIncompletePaymentFound", payment);
+  //("onIncompletePaymentFound", payment);
   return axiosClient.post("/incomplete", { payment }, config);
 };
 

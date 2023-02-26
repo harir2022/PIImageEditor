@@ -1,9 +1,10 @@
 import React, { CSSProperties } from "react";
 import { User } from "../";
-
+import {Link}  from 'react-router-dom'
 interface Props {
   onSignIn: () => void;
   onSignOut: () => void;
+   
   user: User | null
 }
 
@@ -17,17 +18,22 @@ const headerStyle: CSSProperties = {
   justifyContent: "space-between",
 };
 
-export default function Header(props: Props) {
+export default function Header(props: Props ) {
   return (
     <header style={headerStyle}>
-      <div style={{ fontWeight: "bold" }}>Pi Bakery</div>
+      <Link to="/shop">
+          <div style={{ fontWeight: "bold" }}>Pi Image Editor</div>
+      </Link>
+        
 
       <div>
         {props.user === null ? (
           <button onClick={props.onSignIn}>Sign in</button>
         ) : (
           <div>
-            @{props.user.username} <button type="button" onClick={props.onSignOut}>Sign out</button>
+       
+            @{props.user.username} 
+            <button type="button" onClick={props.onSignOut}>Sign out</button>
           </div>
         )}
       </div>

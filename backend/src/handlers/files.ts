@@ -4,55 +4,105 @@ import express, { Request, Response } from 'express';
 import path from 'path';
 import platformAPIClient from "../services/platformAPIClient";
 
+import cloudinary from 'cloudinary';
+
+
+
+
+const cloudinaryUploader = async(auth:string,image:string)=>{
+  // Upload
+
+      const res = await  cloudinary.v2.uploader.upload( image,{
+        folder: auth,
+      })
+      return res;
+}
 
 
 export default function mountServiceEndpoints(router: Router) {
   // handle the user auth accordingly
   router.post('/upload',async(req: Request, res: Response) => {
-          // console.log(req.body.Image)
+
+        const auth = req.body.uid
+        if(!auth && auth==undefined) 
+          {
+            // //("login first")
+            return res.json({
+            success:false,
+            msg:"login first"              
+          })        
+        }
+        const store= req.app.locals.store;
+        const userCollection= req.app.locals.userCollection;
+    
+        // const url="asdf";
+         const cloud=  await cloudinaryUploader(auth,req.body.image);
+         const imageObject= {
+             url: cloud.url,
+             name:req.body.imageName
+        }
           
-          const store= req.app.locals.store;
-          const userCollection= req.app.locals.userCollection;
-      
-          // console.log(req.body)
-          const auth = req.body.authRes.user.uid;
-          if(auth==undefined) 
-            {
-              return res.json({
-              success:false,
-              msg:"login first"
-              
-            })        
-          }
+          // //(req.body.uid)
+     
           let currentUser = await userCollection.findOne({ uid: auth});
-          // console.log(currentUser)
-          const files = req.body.files;
-          if(currentUser){
-                  for (const file of files) {
-                      // console.log(`${file.cid} ${file.name} ${file.size}`)
-                      const insertedRow = await store.insertOne({
-                        uid:auth,
-                        url:file.cid,
-                        date: Date.now()
-                    })
-                    // console.log(insertedRow)
-                  }
-             
-              res.status(200).json({
-                success:true,
-                msg:"successfully uploaded"
-                
-              })
-          }
-          else{
-            res.status(400).json({
-              success:false,
-              msg:"failed to upload"
+          // //(currentUser)
+      
+          try {
+            const insertedRow = await store.insertOne({
+              uid:auth,
+              image: imageObject,
+              date: Date.now()
+          })
+          //("inserted a row ")
+          //(insertedRow)
+       
+        res.status(200).json({
+          success:true,
+          msg:"successfully uploaded"
+          
+        })
+            
+          } catch (error) {
+            //(error)
+            return res.status(400).json({
+              success:false
             })
-          }       
+          }
           
           
    });
+
+
+   //get images;
+
+   router.get('/gallery/:uid',async(req:Request,res:Response)=>{
+    const userUid= req.params.uid
+    // //(req.params.uid)
+    if(!userUid){
+      return res.status(404).json({
+        success:false,
+        msg:"Login in first"
+      })
+    }
+    //(req.body)
+    const store= req.app.locals.store;
+    let images:object[]=[];
+    const results = await store.find({uid:userUid}).toArray().then((d:any)=>{
+      for(let ch of d){
+        images.push(ch.image);
+      }
+    });
+    
+    //(images)
+    res.json({
+      images
+    })
+
+   })
+
+
+
+
 
   // handle the user auth accordingly
   router.get('/list', async (req: Request, res: Response) => {
@@ -69,13 +119,15 @@ export default function mountServiceEndpoints(router: Router) {
       }
     })
 
-    // console.log(users)
+    // //(users)
 
    return  res.status(200).json({
       success:true,
       users
     })
   });
+
+
 
 
 
@@ -117,7 +169,7 @@ export default function mountServiceEndpoints(router: Router) {
                 images.push(ch.url);
               }
         })
-        // console.log(images)
+        // //(images)
         res.status(200).json({
           success:true,
           images
