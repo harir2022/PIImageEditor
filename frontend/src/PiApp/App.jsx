@@ -15,14 +15,14 @@ function fck(url){
             const file = new File([blob] , 'image',{type:blob.type});
              onFileSave(file);
         }
-        ).catch((e)=>{console.log(e)})
+        ).catch((e)=>{//(e)})
 
 function readFIle(file){
      const fs = new FileReader();
 
      fs.addEventListener('load',()=>{
           const res = fs.result;
-          // console.log(res)
+          // //(res)
      })     
      fs.readAsDataURL(file);
 }
@@ -56,8 +56,8 @@ function readFIle(file){
                 onSave={(editedImageObject, designState) => {
                     // (onFileSave(editedImageObject))
                     fck(designState.imgSrc)
-                    console.log(editedImageObject)
-                    console.log(designState)
+                    //(editedImageObject)
+                    //(designState)
                 }
               }
                 onClose={closeImgEditor}

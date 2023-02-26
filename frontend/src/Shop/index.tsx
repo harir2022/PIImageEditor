@@ -1,4 +1,5 @@
-
+import {axiosClient , config} from '../Axios/axiosClient';
+import {BrowserRouter as Router , Route} from 'react-router-dom'
 import React, {HtmlHTMLAttributes, useState} from 'react';
 import axios from 'axios';
 import ProductCard from './components/ProductCard';
@@ -8,6 +9,7 @@ import ImageUpload from '../PiApp/ImageUpload';
 // @ts-ignore
 import { Web3Storage } from 'web3.storage/dist/bundle.esm.min.js'
 import Gallery from '../PiApp/Gallery/Gallery';
+import ImageDetails from '../PiApp/Gallery/GalleryComponent/ImageDetails';
 
 
 
@@ -56,19 +58,19 @@ interface WindowWithEnv extends Window {
 
 const _window: WindowWithEnv = window;
 const backendURL = _window.__ENV && _window.__ENV.backendURL;
-const web3_api_key = _window.__ENV && _window.__ENV.web3_api_key;
 
-const axiosClient = axios.create({ baseURL: `${backendURL}`, timeout: 20000, withCredentials: true});
-const config = {headers: {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}};
+
+
+// const config = {headers: {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}};
 
 
 export default function Shop() {
-  const [authRes, setAuthRes] = useState<AuthResult|null>()
+  
   const [user, setUser] = useState<User | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
 
   const signIn = async () => {
-    console.log("Sigin in")
+    //("Sigin in")
     const scopes = ['username', 'payments'];
     const authResult: AuthResult = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
     
@@ -112,95 +114,102 @@ export default function Shop() {
       onError
     };
     const payment = await window.Pi.createPayment(paymentData, callbacks);
-    console.log(payment);
+    //(payment);
   }
 
   const onIncompletePaymentFound = (payment: PaymentDTO) => {
-    console.log("onIncompletePaymentFound", payment);
+    //("onIncompletePaymentFound", payment);
     return axiosClient.post('/payments/incomplete', {payment});
   }
 
   const onReadyForServerApproval = (paymentId: string) => {
-    console.log("onReadyForServerApproval", paymentId);
+    //("onReadyForServerApproval", paymentId);
     axiosClient.post('/payments/approve', {paymentId}, config);
   }
 
   const onReadyForServerCompletion = (paymentId: string, txid: string) => {
-    console.log("onReadyForServerCompletion", paymentId, txid);
+    //("onReadyForServerCompletion", paymentId, txid);
     axiosClient.post('/payments/complete', {paymentId, txid}, config);
   }
 
   const onCancel = (paymentId: string) => {
-    console.log("onCancel", paymentId);
+    //("onCancel", paymentId);
     return axiosClient.post('/payments/cancelled_payment', {paymentId});
   }
 
   const onError = (error: Error, payment?: PaymentDTO) => {
-    console.log("onError", error);
+    //("onError", error);
     if (payment) {
-      console.log(payment);
+      //(payment);
       // handle the error accordingly
     }
   }
 
-  //image upload
-  const  submitHandler= async(e:any, image:any)=>{    
-        e.preventDefault();
-        if(image==null) return ;   
-
-        // console.log(image);
-        if(!authRes) return;
-        const  formdata = new FormData();
-        formdata.set('image',image.imageBase64);
-        
-
-        formdata.set('imageName',image.name)
-        formdata.set('accessToken',authRes.accessToken)
-        formdata.set('uid',authRes.user.uid)
-        formdata.set('userName',authRes.user.username)
-
-        console.log(formdata)
-
-        let  config = {headers: {'Content-Type': 'multipart/form-data', 'Access-Control-Allow-Origin': '*'}};
-        await axiosClient.post("/users/upload",formdata,config);      
-        
-        
-
-        // const images=new DataTransfer();
-        // images.items.add(image);
-        // uploadToIpfs(image);
-        // console.log("image uploaded :submit hanlder")
-        // console.log(properImage)
-     
-  }
-
+  
   
 
- 
+  const [authRes, setAuthRes] = useState<AuthResult|null>()
 
   const [file, setFile] = useState<File|null>(null)
+  if(!authRes){
+    <SignIn onSignIn={signIn} onModalClose={onModalClose} />
+  }
+
+  const [showGallery, setShowGallery] = useState(false)
+  const [showApp, setShowApp] = useState(false)
   return (
     <>
-    <Header user={user} onSignIn={signIn} onSignOut={signOut}/>   
+    <Header user={user} onSignIn={signIn} onSignOut={signOut} />  
+    {authRes ?
+    <>
+            {
+              !showGallery && !showApp ?(
+                <>
+                <button 
+                className="w-full bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
+                    onClick={()=>{setShowGallery(!showGallery)}}>
+                      {showGallery ? 
+                      (
+                      <>
+                      Hide Gallery 
+                      </>
+                      ): 
+                      <>
+                      Show Gallery
+                      </>
+                      }
+                  </button>
+                <ImageUpload  {...authRes}/>
+                </>
+              ):(
+                showGallery  ?(
+                  <>
+                  <p className="font-sans text-center text-xl font-bold">Gallery</p>
+                  <Gallery {...authRes}/>
+                  </>
+                ):(
+                  showApp &&(
+                    <ImageUpload  {...authRes}/>
+                  )
+                )
+              )
 
-    <ImageUpload submitHandler={submitHandler}/>
+            }  
     
-    {/* <form onSubmit={(e:any)=>{
-      // submitHandler(e,image);
-      e.preventDefault();
-      if(!file) {
-        console.log("file is null")
-        return;
-      }
-      console.log("uploadiin....")
-      uploadToIpfs(file);
-    }} >
-      <input type="file" name="" id=" "  multiple  onChange={(e:any)=>{
-        setFile(e.target.files)
-      }}/>
-      <input type="submit" value="Okay" />
-    </form> */}
+    </>
+    :(
+      <>
+      <p className='w-full flex  md:items-start h-screen bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 justify-center items-center bg-blue-500 text-white-700 font-semibold hover:text-blue bg-white-500 py-2 px-4 '>
+            Login first
+      </p>
+      </>
+    )
+}
+   
     
+    { authRes && showGallery &&
+            <Gallery {...authRes}/>
+    } 
     
       
       {/* <ProductCard

@@ -70,9 +70,9 @@ import cloudinary from 'cloudinary';
 
 // Configuration 
 cloudinary.v2.config({
-  cloud_name: "dn0fnz8af",
-  api_key: "551424863633635",
-  api_secret: "vxp0ByTfM3c0CaxicVlqRGtCNq4"
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET
 });
 
 
@@ -126,11 +126,11 @@ app.listen(8000, async () => {
     app.locals.userCollection = db.collection('users');
     app.locals.store =db.collection('store');
     app.locals.sharedCollection=db.collection('shared_resources');
-    console.log('Connected to MongoDB on: ', mongoUri)
+    //('Connected to MongoDB on: ', mongoUri)
   } catch (err) {
     console.error('Connection to MongoDB failed: ', err)
   }
 
-  console.log('App platform demo app - Backend listening on port 8000!');
-  console.log(`CORS config: configured to respond to a frontend hosted on ${env.frontend_url}`);
+  //('App platform demo app - Backend listening on port 8000!');
+  //(`CORS config: configured to respond to a frontend hosted on ${env.frontend_url}`);
 });
