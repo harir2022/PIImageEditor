@@ -182,15 +182,38 @@ export default function Shop() {
                 <ImageUpload  {...authRes}/>
                 </>
               ):(
-                showGallery  ?(
+                showGallery  && !showApp?(
                   <>
                   <p className="font-sans text-center text-xl font-bold">Gallery</p>
                   <Gallery {...authRes}/>
                   </>
                 ):(
-                  showApp &&(
+                  showApp && !showGallery?(
                     <ImageUpload  {...authRes}/>
-                  )
+                
+                  ):<>
+                      <footer className="footer-1 bg-gray-100 py-8 sm:py-12" style={{
+  position: "fixed",
+  left: 0,
+  bottom: 0,
+  width: "100%",
+  textAlign:"center"}}>
+  
+      <ProductCard
+        name="π "
+        description="Support our developers with PI CryptoCurrency"
+        price={1}
+        onClickBuy={() => {
+            if(!authRes){
+               setShowModal(true);
+              return;
+            }
+          orderProduct("Support", 1, { productId: 'supporting' })
+        }}
+      />
+     
+  </footer>
+                  </>
                 )
               )
 
@@ -199,37 +222,47 @@ export default function Shop() {
     </>
     :(
       <>
-      <p className='w-full flex  md:items-start h-screen bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 justify-center items-center bg-blue-500 text-white-700 font-semibold hover:text-blue bg-white-500 py-2 px-4 '>
+      <p className='w-full flex  md:items-start h-screen bg-white-500 text-lg text-blue-1700 font-semibold  justify-center items-center bg-white-500 text-white-1100 font-semibold hover:text-blue bg-white-500 py-2 px-4 '>
             Login first
-      </p>
+        </p>
+            <footer className="footer-1 bg-gray-100 py-8 sm:py-12" style={{
+  position: "fixed",
+  left: 0,
+  bottom: 0,
+  width: "100%",
+  textAlign:"center"}}>
+  
+      <ProductCard
+        name="π "
+        description="Support our developers with PI CryptoCurrency"
+        price={1}
+        onClickBuy={() => {
+            if(!authRes){
+               setShowModal(true);
+              return;
+            }
+          orderProduct("Support", 1, { productId: 'supporting' })
+        }}
+      />
+     
+  </footer>
+      
       </>
     )
 }
-   
+{/*    
     
     { authRes && showGallery &&
             <Gallery {...authRes}/>
-    } 
-    
-      
-      {/* <ProductCard
-        name="Apple Pie"
-        description="You know what this is. Pie. Apples. Apple pie."
-        price={3}
-        pictureURL="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Apple_pie.jpg/1280px-Apple_pie.jpg"
-        pictureCaption="Picture by Dan Parsons - https://www.flickr.com/photos/dan90266/42759561/, CC BY-SA 2.0, https://commons.wikimedia.org/w/index.php?curid=323125"
-        onClickBuy={() => orderProduct("Order Apple Pie", 3, { productId: 'apple_pie_1' })}
-      />
-      <ProductCard
-        name="Lemon Meringue Pie"
-        description="Non-contractual picture. We might have used oranges because we had no lemons. Order at your own risk."
-        price={5}
-        pictureURL="https://live.staticflickr.com/1156/5134246283_f2686ff8a8_b.jpg"
-        pictureCaption="Picture by Sistak - https://www.flickr.com/photos/94801434@N00/5134246283, CC BY-SA 2.0"
-        onClickBuy={() => orderProduct("Order Lemon Meringue Pie", 5, { productId: 'lemon_pie_1' })}
-      /> */}
+    }  */}
 
+    
+  {/* { !showGallery && showApp && 
+
+} */}
       { showModal && <SignIn onSignIn={signIn} onModalClose={onModalClose} /> }
     </>
   );
 }
+
+
