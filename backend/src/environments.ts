@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 
 //("NODE_ENV: " + process.env.NODE_ENV);
 
-const result = dotenv.config()
+const result = require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
 
 if (result.error) {
   if (process.env.NODE_ENV === "development") {
