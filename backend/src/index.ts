@@ -6,7 +6,7 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import logger from 'morgan';
 import MongoStore from 'connect-mongo';
-import { MongoClient } from 'mongodb';
+import{ MongoClient, ServerApiVersion } from 'mongodb';
 import env from './environments';
 import mountPaymentsEndpoints from './handlers/payments';
 import mountUserEndpoints from './handlers/users';
@@ -22,7 +22,8 @@ import mountServiceEndpoints from './handlers/files';
 
 
 const dbName = env.mongo_db_name;
-const mongoUri = `mongodb://${env.mongo_host}/${dbName}`;
+// const mongoUri = `mongodb://${env.mongo_host}/${dbName}`;
+const mongoUri =env.mongo_host
 const mongoClientOptions = {
   authSource: "admin",
   auth: {
@@ -118,14 +119,25 @@ app.get('/', async (_, res) => {
 
 // III. Boot up the app:
 
+
+
 app.listen(8000, async () => {
   try {
-    const client = await MongoClient.connect(mongoUri, mongoClientOptions)
-    const db = client.db(dbName);
-    app.locals.orderCollection = db.collection('orders');
-    app.locals.userCollection = db.collection('users');
-    app.locals.store =db.collection('store');
-    app.locals.sharedCollection=db.collection('shared_resources');
+    var MongoClient = require('mongodb').MongoClient;
+
+    var uri = env.mongo_host
+    MongoClient.connect(uri, function(err:any , client:any) {
+      const collection = client.db("test").collection("devices");
+      // perform actions on the collection object
+      // client.close();
+      
+      const db = client.db(dbName);
+      app.locals.orderCollection = db.collection('orders');
+      app.locals.userCollection = db.collection('users');
+      app.locals.store =db.collection('store');
+      app.locals.sharedCollection=db.collection('shared_resources');
+      console.log("Running server and db ")
+    });
     //('Connected to MongoDB on: ', mongoUri)
   } catch (err) {
     console.error('Connection to MongoDB failed: ', err)
